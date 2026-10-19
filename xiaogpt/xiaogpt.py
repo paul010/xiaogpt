@@ -217,6 +217,11 @@ class MiGPT:
         if not record:
             return False
         query = record.get("query", "")
+        if self.config.routing.get("enabled"):
+            from xiaogpt.routing import native_request
+
+            if native_request(query):
+                return False
         return (
             self.in_conversation
             and not query.startswith(WAKEUP_KEYWORD)
@@ -426,7 +431,9 @@ class MiGPT:
 
             print("-" * 20)
             print("问题：" + query + "？")
-            if not self.chatbot.has_history():
+            if not self.chatbot.has_history() and not self.config.routing.get(
+                "enabled"
+            ):
                 query = f"{query},{self.config.prompt}"
             # some model can not detect the language code, so we need to add it
 

@@ -34,6 +34,43 @@ OpenRouter 使用 `api_base: https://openrouter.ai/api/v1`，模型用完整 `pr
 
 分别向两台音箱说“小爱同学，请告诉我一加一等于几”。验收要同时确认获取到了该设备的新提问、OpenRouter返回有效文本、音箱实际播报。小米播报接口返回 code=0 只表示接受了请求，仍需实际听到。两台设备音量不同可能造成听感差异，不自动大幅改变音量。
 
+## 动态模型选择与每月费用
+
+在两份私有配置加入以下内容，可开启本分支的路由；必须使用OpenRouter HTTPS地址。关闭`enabled`即可回到上游固定模型模式。
+
+```yaml
+routing:
+  enabled: true
+  monthly_budget_usd: 3
+```
+
+普通问题使用`qwen/qwen3-235b-a22b-2507`；包含分析、对比、排查等意图时选择`openai/gpt-6.1-sol`。说“请用GPT重新回答”可携带当前音箱上一个问题重答；“请用千问……”强制省钱。音乐、闹钟、音量和直接开关灯等原生命令不转给模型，也不静音小爱。此为可核验的本地规则，不是通用语义分类器。
+
+两实例共用同一SQLite账本，按Asia/Shanghai自然月统计，默认路径`~/.local/state/xiaogpt/budget.sqlite3`。请求发送前在事务中预留保守最大费用，结束后按流式尾部usage.cost结算；连接中断、缺失费用和进程崩溃的预留不自动释放，并跨月保留，避免重启绕过额度。数据库故障时停止调用。达到预算或余额不足时停止付费AI，小爱原生功能继续。累计达到80%后仅使用Qwen。Provider价格上限与输出预算同时限制单次调用；账本不包含原始问题或回答。
+
+Qwen上限512输出tokens；Sol低推理档、1536总输出tokens（包括内部推理）。上下文保留最近三轮，按UTF-8字节和消息框架开销保守限制输入。Sol首个可见token前超时或服务错误，可回退Qwen一次；有回答文字交给播报管线后不自动重答。Sol返回服务商条款403会在共享账本中标记不可用，后续不再重复试探，也不绕过服务商限制。提示音使用“AI”，不会把Qwen冒充成GPT。
+
+建议同时把音箱专用OpenRouter Key设为$3 Monthly，不与其他程序共用。这是服务器的额外拦截层；OpenRouter自然月按UTC重置，与本地北京时间差8小时，重叠处可能更早暂停。费用指API credits，不包括充值手续费/税费。
+
+首次切换前停止两实例，在私有终端读取此Key已经发生的当月usage_monthly并只初始化一次：
+
+```bash
+.venv/bin/python -m xiaogpt.routing seed --amount 已发生的美元费用
+.venv/bin/python -m xiaogpt.routing status
+```
+
+不要在已有请求后反复用累计费用重新seed，否则会重复计算。不能把账本删除当作“费用已清零”。恢复服务前备份账本；如果某次费用未知，须用对应generation记录核查后再由维护人员处理，不自动退款。
+
+若已实际验证Sol返回403，先执行以下命令将其停用，然后上线Qwen与预算控制。权限恢复并单次测试成功后，才解除标记；不能把代码有Sol路径说成账号已能使用Sol。
+
+```bash
+.venv/bin/python -m xiaogpt.routing block --model openai/gpt-6.1-sol
+# 仅在账号权限恢复并测试成功后：
+.venv/bin/python -m xiaogpt.routing unblock --model openai/gpt-6.1-sol
+```
+
+离线验证：`.venv/bin/python -m unittest discover -s tests -v`。测试覆盖跨进程争用、月界、缺失usage、重启、403停用、空/部分回答、上下文与原生命令，使用占位凭据，不产生模型费用。
+
 ## 配置和回滚
 
 所有账号、密码、DID、cookie、token、API密钥和家庭运行日志都放在仓库外。仓库中只有占位示例；提交前检查 `git diff --cached`。不要 `git add -f` 添加被忽略的运行配置。

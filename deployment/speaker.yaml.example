@@ -17,5 +17,9 @@ mute_xiaoai: true
 use_command: false
 tts: mi
 verbose: false
+routing:
+  enabled: true
+  monthly_budget_usd: 3
+# Both instances default to the same ~/.local/state/xiaogpt/budget.sqlite3.
 start_conversation: 开始持续对话
 end_conversation: 结束持续对话

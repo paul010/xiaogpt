@@ -30,6 +30,10 @@ BOTS: dict[str, type[BaseBot]] = {
 
 
 def get_bot(config: Config) -> BaseBot:
+    if config.bot == "chatgptapi" and config.routing.get("enabled"):
+        from xiaogpt.bot.routed_bot import RoutedBot
+
+        return RoutedBot.from_config(config)
     try:
         return BOTS[config.bot].from_config(config)
     except KeyError:

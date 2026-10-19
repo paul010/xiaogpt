@@ -90,6 +90,7 @@ class Config:
     ] = "mi"
     tts_options: dict[str, Any] = field(default_factory=dict)
     gpt_options: dict[str, Any] = field(default_factory=dict)
+    routing: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.proxy:
