@@ -139,3 +139,15 @@ config/
 nohup.out
 xiao_config.yaml
 .DS_Store
+
+# Household credentials and device state belong outside the repository.
+common.env
+*.local.yaml
+*.local.yml
+xiao_config*.yaml
+xiao_config*.yml
+config*bak.yaml
+.mi.token*
+*.token
+*.pem
+*.key

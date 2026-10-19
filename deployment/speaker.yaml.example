@@ -1,0 +1,21 @@
+# Copy to ~/.config/xiaogpt/bedroom.yaml and livingroom.yaml (chmod 600).
+# Use a different mi_did for each speaker. Never commit actual device settings.
+hardware: S12A
+mi_did: REPLACE_WITH_THIS_SPEAKER_DID
+account: REPLACE_WITH_MI_ACCOUNT
+password: REPLACE_WITH_MI_PASSWORD
+bot: chatgptapi
+api_base: https://openrouter.ai/api/v1
+# OPENAI_API_KEY comes from common.env; do not add openai_key here.
+gpt_options:
+  model: qwen/qwen3-235b-a22b-2507
+  max_tokens: 512
+keyword: [请]
+prompt: 请用简洁自然的中文回答，控制在150字以内，不要使用Markdown、表格或链接。
+stream: true
+mute_xiaoai: true
+use_command: false
+tts: mi
+verbose: false
+start_conversation: 开始持续对话
+end_conversation: 结束持续对话
